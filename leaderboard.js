@@ -1,12 +1,6 @@
 // Firebase Initialization
 const firebaseConfig = {
-    apiKey: "AIzaSyBGXJqTjZH79JI2f0hTNXqFE8HOFcUb_xk",
-    authDomain: "e-com-dff4a.firebaseapp.com",
-    databaseURL: "https://e-com-dff4a-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "e-com-dff4a",
-    storageBucket: "e-com-dff4a.firebasestorage.app",
-    messagingSenderId: "242139274510",
-    appId: "1:242139274510:web:d4743045bc8af322028b5f"
+
 };
 
 const app = firebase.initializeApp(firebaseConfig);
@@ -20,7 +14,11 @@ function fetchLeaderboard() {
     usersRef.once('value', (snapshot) => {
         const users = snapshot.val();
         if (!users) {
-            console.log("No users found.");
+            document.getElementById('leaderboard').innerHTML = `
+            <div class="text-center mt-5">
+                <h3 class="fw-bold">No Users Yet!</h3>
+            </div>
+            `;
             return;
         }
 
@@ -34,7 +32,7 @@ function fetchLeaderboard() {
 }
 
 /**
- * Displays the leaderboard using Bootstrap cards.
+ * Displays the leaderboard in a vertical layout.
  * @param {Array} users - Array of user objects sorted by rating.
  */
 function displayLeaderboard(users) {
@@ -45,12 +43,12 @@ function displayLeaderboard(users) {
         const position = index + 1; // Rank starts from 1
 
         leaderboardContainer.innerHTML += `
-            <div class="col-md-6 col-lg-4">
-                <div class="card shadow text-center p-3">
+            <div class="w-100 d-flex justify-content-center">
+                <div class="card shadow text-center p-3 my-2" style="max-width: 400px; width: 100%;">
                     <span class="badge bg-primary position-absolute top-0 start-50 translate-middle">
                         #${position}
                     </span>
-                    <img src="${user.image_url}" alt="${user.name}" class="img-fluid rounded-circle mx-auto d-block mt-3" style="width: 120px; height: 120px; object-fit: cover;">
+                    <img src="${user.image_url}" alt="${user.name}" class="img-fluid rounded-circle mx-auto d-block mt-3" style="width: 100px; height: 100px; object-fit: cover;">
                     <div class="card-body">
                         <h5 class="fw-bold">${user.name}</h5>
                         <p class="text-muted">Rating: <span class="fw-bold">${user.rating || 1000}</span></p>

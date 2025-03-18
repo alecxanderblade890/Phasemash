@@ -1,44 +1,32 @@
-// Firebase Initialization
-const firebaseConfig = {
+document.addEventListener('DOMContentLoaded', fetchUsers);
 
-};
-
-const app = firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
-const usersRef = database.ref('users');
-
-let allUsers = [];         // Stores all users from Firebase
-let comparisonPairs = [];  // Stores all possible unique pairs
-let lastPair = [];         // Keeps track of the last shown pair
+let allUsers = [];
+let comparisonPairs = [];
+let lastPair = [];
 
 /**
- * Fetches all users from Firebase and prepares the comparisons.
+ * Fetches all users from the backend and prepares the comparisons.
  */
-function fetchUsers() {
-    usersRef.once('value', (snapshot) => {
-        const users = snapshot.val();
-        if (!users) {
+async function fetchUsers() {
+    try {
+        const response = await fetch('/api/users');
+        const users = await response.json();
+
+        if (!users || users.length < 2) {
             document.getElementById('voting-section').innerHTML = `
-            <div class="text-center mt-5">
-                <h3 class="fw-bold">No Users Yet!</h3>
-            </div>
+                <div class="text-center mt-5">
+                    <h3 class="fw-bold">No Users Yet!</h3>
+                </div>
             `;
             return;
         }
 
-        // Convert object to array with keys
-        allUsers = Object.entries(users).map(([key, user]) => ({
-            key,
-            ...user
-        }));
-
-        if (allUsers.length < 2) {
-            console.log("Not enough users for comparison.");
-            return;
-        }
-        generateComparisonPairs(); // Generate all unique matchups
-        getNextComparison(); // Start first matchup
-    });
+        allUsers = users;
+        generateComparisonPairs();
+        getNextComparison();
+    } catch (error) {
+        console.error("Error fetching users:", error);
+    }
 }
 
 /**
@@ -53,7 +41,7 @@ function generateComparisonPairs() {
         }
     }
 
-    shuffleArray(comparisonPairs); // Shuffle to make matchups random
+    shuffleArray(comparisonPairs);
 }
 
 /**
@@ -80,7 +68,6 @@ function getNextComparison() {
         return;
     }
 
-    // Just pop the next pair without excessive filtering
     let nextPair = comparisonPairs.pop();
     lastPair = nextPair;
 
@@ -100,7 +87,7 @@ function displayUsers(user1, user2) {
                         <img src="${user1.image_url}" alt="${user1.name}" class="img-fluid rounded-top" style="object-fit: cover;">
                     </div>
                     <div class="card-body">
-                        <button class="btn btn-primary w-100 fw-bold" onclick="vote('${user1.key}', ${user1.rating}, '${user2.key}', ${user2.rating})">VOTE</button>
+                        <button class="btn btn-primary w-100 fw-bold" onclick="vote('${user1.key}', '${user2.key}')">VOTE</button>
                     </div>
                 </div>
             </div>
@@ -110,7 +97,7 @@ function displayUsers(user1, user2) {
                         <img src="${user2.image_url}" alt="${user2.name}" class="img-fluid rounded-top" style="object-fit: cover;">
                     </div>
                     <div class="card-body">
-                        <button class="btn btn-primary w-100 fw-bold" onclick="vote('${user2.key}', ${user2.rating}, '${user1.key}', ${user1.rating})">VOTE</button>
+                        <button class="btn btn-primary w-100 fw-bold" onclick="vote('${user2.key}', '${user1.key}')">VOTE</button>
                     </div>
                 </div>
             </div>
@@ -119,23 +106,20 @@ function displayUsers(user1, user2) {
 }
 
 /**
- * Handles voting and updates the Firebase database.
+ * Handles voting and updates the backend.
  */
-function vote(winnerKey, winnerRating, loserKey, loserRating) {
-    const k = 32; // K-factor for Elo rating system
+async function vote(winnerKey, loserKey) {
+    try {
+        const response = await fetch('/api/vote', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ winnerKey, loserKey })
+        });
 
-    const expectedWinner = 1 / (1 + Math.pow(10, (loserRating - winnerRating) / 400));
-    const expectedLoser = 1 / (1 + Math.pow(10, (winnerRating - loserRating) / 400));
+        if (!response.ok) throw new Error("Failed to record vote");
 
-    const newWinnerRating = winnerRating + k * (1 - expectedWinner);
-    const newLoserRating = loserRating + k * (0 - expectedLoser);
-
-    // Update database
-    database.ref(`users/${winnerKey}/rating`).set(Math.round(newWinnerRating));
-    database.ref(`users/${loserKey}/rating`).set(Math.round(newLoserRating));
-
-    getNextComparison(); // Load a new comparison
+        getNextComparison(); // Load a new comparison
+    } catch (error) {
+        console.error("Error voting:", error);
+    }
 }
-
-// Initialize
-document.addEventListener('DOMContentLoaded', fetchUsers);

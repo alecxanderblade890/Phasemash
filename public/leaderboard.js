@@ -1,34 +1,32 @@
-// Firebase Initialization
-const firebaseConfig = {
-
-};
-
-const app = firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
-const usersRef = database.ref('users');
+document.addEventListener('DOMContentLoaded', fetchLeaderboard);
 
 /**
- * Fetches all users from Firebase, sorts them by rating, and displays them.
+ * Fetches the leaderboard from the server.
  */
-function fetchLeaderboard() {
-    usersRef.once('value', (snapshot) => {
-        const users = snapshot.val();
-        if (!users) {
+async function fetchLeaderboard() {
+    try {
+        const response = await fetch('/api/leaderboard');
+        if (!response.ok) throw new Error('Failed to fetch leaderboard');
+
+        const users = await response.json();
+        if (users.length === 0) {
             document.getElementById('leaderboard').innerHTML = `
-            <div class="text-center mt-5">
-                <h3 class="fw-bold">No Users Yet!</h3>
-            </div>
+                <div class="text-center mt-5">
+                    <h3 class="fw-bold">No Users Yet!</h3>
+                </div>
             `;
             return;
         }
 
-        // Convert to array and sort by rating (descending)
-        const sortedUsers = Object.entries(users)
-            .map(([key, user]) => ({ key, ...user }))
-            .sort((a, b) => (b.rating || 1000) - (a.rating || 1000));
-
-        displayLeaderboard(sortedUsers);
-    });
+        displayLeaderboard(users);
+    } catch (error) {
+        console.error('Error fetching leaderboard:', error);
+        document.getElementById('leaderboard').innerHTML = `
+            <div class="text-center mt-5">
+                <h3 class="fw-bold text-danger">Error loading leaderboard.</h3>
+            </div>
+        `;
+    }
 }
 
 /**
@@ -58,6 +56,3 @@ function displayLeaderboard(users) {
         `;
     });
 }
-
-// Load leaderboard when page loads
-document.addEventListener('DOMContentLoaded', fetchLeaderboard);

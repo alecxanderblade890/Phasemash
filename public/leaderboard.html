@@ -11,11 +11,27 @@
 </head>
 <body class="bg-light">
 
-    <div id="header" class="text-white py-2 text-center" style="background-color: #8C1B08;">
-        <h2>
-            <a href="index.html" class="text-white text-decoration-none">LEADERBOARD</a>
-        </h2>
-    </div>
+   <!-- Navbar (Always Collapsed) -->
+   <nav class="navbar navbar-dark" style="background-color: #8C1B08;">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.html">PHASEMASH</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                <ul class="navbar-nav ms-auto text-end">
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="add_user.html">Add User</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="index.html">Vote</a>
+                    </li>
+
+                </ul>
+            </div>
+        </div>
+    </nav>
 
 <div class="container mt-4">
     <div id="leaderboard" class="d-flex flex-column align-items-center">
